@@ -1,0 +1,20 @@
+# Casa Ejemplo — carta expuesta como herramientas
+
+> Plantilla: un negocio con carta publicada como tools para agentes, por dos
+> caminos que leen los mismos datos.
+
+## Para un agente
+
+- `POST /api/mcp` — MCP sobre Streamable HTTP, JSON-RPC 2.0. Declaracion en
+  `/.well-known/mcp.json`.
+- La pagina registra las mismas tools en `document.modelContext` (WebMCP) para
+  el agente que ya la tiene abierta.
+
+## Tools
+
+- `get_carta` — la carta con precios reales. Sin argumentos devuelve el indice.
+- `buscar_plato` — busca en nombre, descripcion y categoria. Ingles o espanol.
+- `get_info` — direccion, horarios, como reservar.
+- `get_guia` — texto completo de las guias que escribe el negocio.
+
+Todas son de SOLO LECTURA. Ninguna reserva, cobra ni escribe.

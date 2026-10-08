@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>carta-mcp — una carta como herramientas para agentes</title>
+<style>
+ body{background:#0f0e0c;color:#e6e1d6;font:16px/1.65 ui-serif,Georgia,serif;margin:0;padding:44px 22px}
+ main{max-width:720px;margin:0 auto} h1{font-weight:400;font-size:30px;margin:0 0 6px}
+ p{color:#a39c90} code{font:13px ui-monospace,monospace;background:#1b1813;padding:2px 6px;border-radius:3px}
+ .t{font:11px ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase;color:#c8921a}
+ ul{padding-left:18px} li{margin:7px 0} hr{border:0;border-top:1px solid #241f18;margin:30px 0}
+ #estado{font:12px ui-monospace,monospace;color:#7d766b;margin-top:22px}
+</style>
+</head><body><main>
+  <p class="t">Demostración</p>
+  <h1>Una carta como herramientas para agentes</h1>
+  <p>Esta página registra sus tools en <code>document.modelContext</code>. Un agente que
+     la tenga abierta puede consultar la carta sin leer el HTML ni adivinar.</p>
+  <hr>
+  <p class="t">Las mismas tools, por dos caminos</p>
+  <ul>
+    <li><b>En la página</b> — WebMCP, para el agente que ya está acá.</li>
+    <li><b>Fuera de la página</b> — <code>POST /api/mcp</code>, JSON-RPC 2.0, para el que no.</li>
+  </ul>
+  <p>Las dos leen los mismos datos. No hay dos fuentes de verdad.</p>
+  <p id="estado">Comprobando soporte de WebMCP…</p>
+</main>
+<script>
+// Las tools de la pagina son proxies finos al mismo endpoint que usan los agentes
+// de afuera. Esa es la decision importante: una sola implementacion, dos puertas.
+(function(){
+  var estado = document.getElementById('estado');
+
+  function llamar(name, args){
+    return fetch('/api/mcp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ jsonrpc:'2.0', id:Date.now(), method:'tools/call',
+                             params:{ name:name, arguments:args||{} } })
+    }).then(function(r){ return r.json(); })
+      .then(function(j){
+        if(j.error) throw new Error(j.error.message);
+        return { content: j.result.content };
+      });
+  }
+
+  var TOOLS = [
+    { name:'get_carta',    description:'La carta, por seccion o categoria.',
+      inputSchema:{ type:'object', properties:{ seccion:{type:'string'}, categoria:{type:'string'} } },
+      execute:function(a){ return llamar('get_carta', a); } },
+    { name:'buscar_plato', description:'Busca en toda la carta. Acepta ingles o espanol.',
+      inputSchema:{ type:'object', properties:{ query:{type:'string'} }, required:['query'] },
+      execute:function(a){ return llamar('buscar_plato', a); } },
+    { name:'get_info',     description:'Direccion, horarios y como reservar.',
+      inputSchema:{ type:'object', properties:{} },
+      execute:function(a){ return llamar('get_info', a); } },
+  ];
+
+  function registrar(){
+    // navigator.modelContext quedo como alias deprecado; document es el vigente.
+    var mc = document.modelContext || navigator.modelContext;
+    if(!mc || typeof mc.registerTool !== 'function') return false;
+    TOOLS.forEach(function(t){
+      // registerTool devuelve promesa en el draft actual; un rechazo no debe
+      // tumbar el registro de las demas.
+      try{ var p = mc.registerTool(t); if(p && p.catch) p.catch(function(){}); }catch(e){}
+    });
+    estado.textContent = '✓ WebMCP disponible · ' + TOOLS.length + ' tools registradas';
+    return true;
+  }
+
+  if(!registrar()){
+    estado.innerHTML = 'Este navegador no expone WebMCP. La pagina funciona igual, y ' +
+      'el servidor sigue disponible en <code>POST /api/mcp</code>.';
+  }
+})();
+</script>
+</body></html>

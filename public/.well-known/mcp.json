@@ -1,0 +1,19 @@
+{
+  "name": "ejemplo-mcp",
+  "version": "1.0.0",
+  "description": "Plantilla: la carta de un negocio como tools para agentes.",
+  "protocolVersion": "2025-06-18",
+  "transport": "streamable-http",
+  "endpoint": "/api/mcp",
+  "authentication": {
+    "type": "none",
+    "note": "Servidor publico y de SOLO LECTURA. Ninguna tool escribe, cobra ni reserva."
+  },
+  "docs": "/llms.txt",
+  "tools": [
+    { "name": "get_carta",    "description": "La carta con precios reales, por seccion o categoria." },
+    { "name": "buscar_plato", "description": "Busca en toda la carta; acepta ingles o espanol." },
+    { "name": "get_info",     "description": "Direccion, horarios y como reservar." },
+    { "name": "get_guia",     "description": "Texto completo de las guias del negocio." }
+  ]
+}
